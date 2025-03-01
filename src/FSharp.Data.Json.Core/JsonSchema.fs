@@ -31,53 +31,60 @@ module JsonSchema =
         | Any
 
     /// Represents a parsed JSON Schema
-    type JsonSchemaDefinition = {
-        Type: JsonSchemaType
-        Description: string option
-        Properties: Map<string, JsonSchemaDefinition> option
-        Required: string list option
-        Items: JsonSchemaDefinition option
-        Enum: JsonValue list option
-        Minimum: decimal option
-        Maximum: decimal option
-        MinLength: int option
-        MaxLength: int option
-        Format: string option
-        Pattern: string option
-        OneOf: JsonSchemaDefinition list option
-        AnyOf: JsonSchemaDefinition list option
-        AllOf: JsonSchemaDefinition list option
-        Reference: string option
-    }
+    type JsonSchemaDefinition =
+        { Type: JsonSchemaType
+          Description: string option
+          Properties: Map<string, JsonSchemaDefinition> option
+          Required: string list option
+          Items: JsonSchemaDefinition option
+          Enum: JsonValue list option
+          Minimum: decimal option
+          Maximum: decimal option
+          MinLength: int option
+          MaxLength: int option
+          Format: string option
+          Pattern: string option
+          OneOf: JsonSchemaDefinition list option
+          AnyOf: JsonSchemaDefinition list option
+          AllOf: JsonSchemaDefinition list option
+          Reference: string option }
 
     /// Default empty schema definition
-    let empty = {
-        Type = Any
-        Description = None
-        Properties = None
-        Required = None
-        Items = None
-        Enum = None
-        Minimum = None
-        Maximum = None
-        MinLength = None
-        MaxLength = None
-        Format = None
-        Pattern = None
-        OneOf = None
-        AnyOf = None
-        AllOf = None
-        Reference = None
-    }
+    let empty =
+        { Type = Any
+          Description = None
+          Properties = None
+          Required = None
+          Items = None
+          Enum = None
+          Minimum = None
+          Maximum = None
+          MinLength = None
+          MaxLength = None
+          Format = None
+          Pattern = None
+          OneOf = None
+          AnyOf = None
+          AllOf = None
+          Reference = None }
 
     /// Convert JSON Schema format to .NET type
     let formatToType (format: string) =
         match format.ToLowerInvariant() with
-        | "date-time" | "date" | "time" -> typeof<DateTime>
-        | "email" | "hostname" | "ipv4" | "ipv6" | "uri" -> typeof<string>
-        | "uuid" | "guid" -> typeof<Guid>
-        | "int32" | "int64" -> typeof<int>
-        | "float" | "double" -> typeof<float>
+        | "date-time"
+        | "date"
+        | "time" -> typeof<DateTime>
+        | "email"
+        | "hostname"
+        | "ipv4"
+        | "ipv6"
+        | "uri" -> typeof<string>
+        | "uuid"
+        | "guid" -> typeof<Guid>
+        | "int32"
+        | "int64" -> typeof<int>
+        | "float"
+        | "double" -> typeof<float>
         | _ -> typeof<string>
 
     /// Parse a JSON Schema from a JsonValue
@@ -87,17 +94,18 @@ module JsonSchema =
                 match schemaJson.[name] with
                 | JsonValue.String s -> Some s
                 | _ -> None
-            else None
+            else
+                None
 
         let getNumberProp name =
             if schemaJson.TryGetProperty(name).IsSome then
                 match schemaJson.[name] with
                 | JsonValue.Number n -> Some n
                 | _ -> None
-            else None
+            else
+                None
 
-        let getIntProp name =
-            getNumberProp name |> Option.map int
+        let getIntProp name = getNumberProp name |> Option.map int
 
         let getType () =
             if schemaJson.TryGetProperty("type").IsSome then
@@ -122,14 +130,16 @@ module JsonSchema =
                         | _ -> None)
                     |> Option.defaultValue Any
                 | _ -> Any
-            else Any
+            else
+                Any
 
         let getEnum () =
             if schemaJson.TryGetProperty("enum").IsSome then
                 match schemaJson.["enum"] with
-                | JsonValue.Array values -> Some (values |> Array.toList)
+                | JsonValue.Array values -> Some(values |> Array.toList)
                 | _ -> None
-            else None
+            else
+                None
 
         let getRequired () =
             if schemaJson.TryGetProperty("required").IsSome then
@@ -142,7 +152,8 @@ module JsonSchema =
                     |> Array.toList
                     |> Some
                 | _ -> None
-            else None
+            else
+                None
 
         let getProperties () =
             if schemaJson.TryGetProperty("properties").IsSome then
@@ -153,76 +164,68 @@ module JsonSchema =
                     |> Map.ofArray
                     |> Some
                 | _ -> None
-            else None
+            else
+                None
 
         let getItems () =
             if schemaJson.TryGetProperty("items").IsSome then
                 match schemaJson.["items"] with
-                | JsonValue.Record _ as itemSchema -> Some (parseSchema itemSchema)
+                | JsonValue.Record _ as itemSchema -> Some(parseSchema itemSchema)
                 | JsonValue.Array schemas when schemas.Length > 0 ->
                     // For tuple schemas, just use the first schema
-                    Some (parseSchema schemas.[0])
+                    Some(parseSchema schemas.[0])
                 | _ -> None
-            else None
+            else
+                None
 
         let getOneOf () =
             if schemaJson.TryGetProperty("oneOf").IsSome then
                 match schemaJson.["oneOf"] with
-                | JsonValue.Array schemas ->
-                    schemas
-                    |> Array.map parseSchema
-                    |> Array.toList
-                    |> Some
+                | JsonValue.Array schemas -> schemas |> Array.map parseSchema |> Array.toList |> Some
                 | _ -> None
-            else None
+            else
+                None
 
         let getAnyOf () =
             if schemaJson.TryGetProperty("anyOf").IsSome then
                 match schemaJson.["anyOf"] with
-                | JsonValue.Array schemas ->
-                    schemas
-                    |> Array.map parseSchema
-                    |> Array.toList
-                    |> Some
+                | JsonValue.Array schemas -> schemas |> Array.map parseSchema |> Array.toList |> Some
                 | _ -> None
-            else None
+            else
+                None
 
         let getAllOf () =
             if schemaJson.TryGetProperty("allOf").IsSome then
                 match schemaJson.["allOf"] with
-                | JsonValue.Array schemas ->
-                    schemas
-                    |> Array.map parseSchema
-                    |> Array.toList
-                    |> Some
+                | JsonValue.Array schemas -> schemas |> Array.map parseSchema |> Array.toList |> Some
                 | _ -> None
-            else None
+            else
+                None
 
         let getReference () =
             if schemaJson.TryGetProperty("$ref").IsSome then
                 match schemaJson.["$ref"] with
                 | JsonValue.String ref -> Some ref
                 | _ -> None
-            else None
+            else
+                None
 
-        {
-            Type = getType()
-            Description = getStringProp "description"
-            Properties = getProperties()
-            Required = getRequired()
-            Items = getItems()
-            Enum = getEnum()
-            Minimum = getNumberProp "minimum"
-            Maximum = getNumberProp "maximum"
-            MinLength = getIntProp "minLength"
-            MaxLength = getIntProp "maxLength"
-            Format = getStringProp "format"
-            Pattern = getStringProp "pattern"
-            OneOf = getOneOf()
-            AnyOf = getAnyOf()
-            AllOf = getAllOf()
-            Reference = getReference()
-        }
+        { Type = getType ()
+          Description = getStringProp "description"
+          Properties = getProperties ()
+          Required = getRequired ()
+          Items = getItems ()
+          Enum = getEnum ()
+          Minimum = getNumberProp "minimum"
+          Maximum = getNumberProp "maximum"
+          MinLength = getIntProp "minLength"
+          MaxLength = getIntProp "maxLength"
+          Format = getStringProp "format"
+          Pattern = getStringProp "pattern"
+          OneOf = getOneOf ()
+          AnyOf = getAnyOf ()
+          AllOf = getAllOf ()
+          Reference = getReference () }
 
     /// Parse a JSON Schema from a string
     let parseSchemaFromString (schemaString: string) =
@@ -259,8 +262,10 @@ module JsonSchema =
             match schema.Format with
             | Some format ->
                 match format.ToLowerInvariant() with
-                | "date-time" | "date" -> createDateTimeType false
-                | "uuid" | "guid" -> createGuidType false
+                | "date-time"
+                | "date" -> createDateTimeType false
+                | "uuid"
+                | "guid" -> createGuidType false
                 | _ -> createStringType false
             | None -> createStringType false
         | Number -> createDecimalType false
@@ -281,8 +286,12 @@ module JsonSchema =
                         let propType = schemaToInferedType umps propSchema
 
                         // Create property with the appropriate type and optionality
-                        { Name = name; Type = if isOptional then propType.EnsuresHandlesMissingValues false else propType }
-                    )
+                        { Name = name
+                          Type =
+                            if isOptional then
+                                propType.EnsuresHandlesMissingValues false
+                            else
+                                propType })
                     |> Array.toList
 
                 InferedType.Record(None, properties, false)
@@ -292,12 +301,15 @@ module JsonSchema =
             | Some itemSchema ->
                 let elementType = schemaToInferedType umps itemSchema
                 let tag = typeTag elementType
-                let order = [tag]
-                let types = Map.ofList [(tag, (InferedMultiplicity.Multiple, elementType))]
+                let order = [ tag ]
+                let types = Map.ofList [ (tag, (InferedMultiplicity.Multiple, elementType)) ]
                 InferedType.Collection(order, types)
             | None ->
-                let order = [InferedTypeTag.Null]
-                let types = Map.ofList [(InferedTypeTag.Null, (InferedMultiplicity.Multiple, InferedType.Top))]
+                let order = [ InferedTypeTag.Null ]
+
+                let types =
+                    Map.ofList [ (InferedTypeTag.Null, (InferedMultiplicity.Multiple, InferedType.Top)) ]
+
                 InferedType.Collection(order, types)
         | Null -> InferedType.Null
         | Any -> InferedType.Top
@@ -310,6 +322,7 @@ module JsonSchema =
             | path when path.StartsWith("#/") ->
                 // Handle local references like "#/definitions/Point"
                 let parts = path.Substring(2).Split('/')
+
                 let rec navigate current parts =
                     match parts with
                     | [||] -> current
@@ -317,7 +330,7 @@ module JsonSchema =
                         match current with
                         | JsonValue.Record fields ->
                             match Array.tryFind (fun (name, _) -> name = parts.[0]) fields with
-                            | Some (_, value) -> navigate value parts.[1..]
+                            | Some(_, value) -> navigate value parts.[1..]
                             | None -> failwith $"Reference part '{parts.[0]}' not found"
                         | _ -> failwith "Invalid reference path"
 
@@ -331,20 +344,15 @@ module JsonSchema =
             | None ->
                 // Also resolve references in nested schemas
                 let resolvedProperties =
-                    schema.Properties
-                    |> Option.map (Map.map (fun _ v -> resolve v))
+                    schema.Properties |> Option.map (Map.map (fun _ v -> resolve v))
 
-                let resolvedItems =
-                    schema.Items |> Option.map resolve
+                let resolvedItems = schema.Items |> Option.map resolve
 
-                let resolvedOneOf =
-                    schema.OneOf |> Option.map (List.map resolve)
+                let resolvedOneOf = schema.OneOf |> Option.map (List.map resolve)
 
-                let resolvedAnyOf =
-                    schema.AnyOf |> Option.map (List.map resolve)
+                let resolvedAnyOf = schema.AnyOf |> Option.map (List.map resolve)
 
-                let resolvedAllOf =
-                    schema.AllOf |> Option.map (List.map resolve)
+                let resolvedAllOf = schema.AllOf |> Option.map (List.map resolve)
 
                 { schema with
                     Properties = resolvedProperties
@@ -372,16 +380,18 @@ module JsonSchema =
                     match schema.MinLength, schema.MaxLength with
                     | Some minLen, Some maxLen when str.Length < minLen || str.Length > maxLen ->
                         Invalid $"String length must be between {minLen} and {maxLen}"
-                    | Some minLen, None when str.Length < minLen ->
-                        Invalid $"String length must be at least {minLen}"
-                    | None, Some maxLen when str.Length > maxLen ->
-                        Invalid $"String length must be at most {maxLen}"
+                    | Some minLen, None when str.Length < minLen -> Invalid $"String length must be at least {minLen}"
+                    | None, Some maxLen when str.Length > maxLen -> Invalid $"String length must be at most {maxLen}"
                     | _ ->
                         // Validate pattern
                         match schema.Pattern with
                         | Some pattern ->
                             let regex = System.Text.RegularExpressions.Regex(pattern)
-                            if regex.IsMatch(str) then Valid else Invalid $"String does not match pattern: {pattern}"
+
+                            if regex.IsMatch(str) then
+                                Valid
+                            else
+                                Invalid $"String does not match pattern: {pattern}"
                         | None -> Valid
                 | _ -> Invalid "Expected a string value"
 
@@ -392,10 +402,8 @@ module JsonSchema =
                     match schema.Minimum, schema.Maximum with
                     | Some min, Some max when num < min || num > max ->
                         Invalid $"Number must be between {min} and {max}"
-                    | Some min, None when num < min ->
-                        Invalid $"Number must be at least {min}"
-                    | None, Some max when num > max ->
-                        Invalid $"Number must be at most {max}"
+                    | Some min, None when num < min -> Invalid $"Number must be at least {min}"
+                    | None, Some max when num > max -> Invalid $"Number must be at most {max}"
                     | _ -> Valid
                 | _ -> Invalid "Expected a number value"
 
@@ -410,10 +418,8 @@ module JsonSchema =
                         match schema.Minimum, schema.Maximum with
                         | Some min, Some max when num < min || num > max ->
                             Invalid $"Integer must be between {min} and {max}"
-                        | Some min, None when num < min ->
-                            Invalid $"Integer must be at least {min}"
-                        | None, Some max when num > max ->
-                            Invalid $"Integer must be at most {max}"
+                        | Some min, None when num < min -> Invalid $"Integer must be at least {min}"
+                        | None, Some max when num > max -> Invalid $"Integer must be at most {max}"
                         | _ -> Valid
                 | _ -> Invalid "Expected an integer value"
 
@@ -430,7 +436,8 @@ module JsonSchema =
                     | Some requiredProps ->
                         let missingProps =
                             requiredProps
-                            |> List.filter (fun prop -> properties |> Array.exists (fun (name, _) -> name = prop) |> not)
+                            |> List.filter (fun prop ->
+                                properties |> Array.exists (fun (name, _) -> name = prop) |> not)
 
                         if missingProps.Length > 0 then
                             let missingPropsStr = String.concat ", " missingProps
@@ -446,12 +453,12 @@ module JsonSchema =
                                         | Some propSchema ->
                                             match validate propSchema propValue with
                                             | Valid -> None
-                                            | Invalid msg -> Some ($"Property '{name}': {msg}")
+                                            | Invalid msg -> Some($"Property '{name}': {msg}")
                                         | None -> None // Allow additional properties
                                     )
 
                                 if propResults.Length > 0 then
-                                    Invalid (String.concat ", " propResults)
+                                    Invalid(String.concat ", " propResults)
                                 else
                                     Valid
                             | None -> Valid
@@ -469,12 +476,11 @@ module JsonSchema =
                             |> Array.mapi (fun idx item ->
                                 match validate itemSchema item with
                                 | Valid -> None
-                                | Invalid msg -> Some ($"Item {idx}: {msg}")
-                            )
+                                | Invalid msg -> Some($"Item {idx}: {msg}"))
                             |> Array.choose id
 
                         if itemResults.Length > 0 then
-                            Invalid (String.concat ", " itemResults)
+                            Invalid(String.concat ", " itemResults)
                         else
                             Valid
                     | None -> Valid
